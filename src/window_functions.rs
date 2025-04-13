@@ -1,4 +1,8 @@
+use core::f64;
 use std::f32::consts::PI;
+
+static PI_F: f64 = f64::consts::PI;
+
 
 pub fn hanning(num: usize) -> Vec<f32> {
     (0..num).map(|x| {0.5 - 0.5 * (PI * 2_f32 * (x as f32) / (num as f32 - 1_f32)).cos()}).collect()
@@ -41,8 +45,11 @@ pub fn nuttall(num: usize) -> Vec<f32> {
     }).collect()
 }
 
-pub fn blackman(num: usize) -> Vec<f32> {
-    todo!()
+pub fn blackman(num: usize) -> Vec<f64> {
+    (0..num).map(|x| {
+        let f: f64 = PI_F*2.0*x as f64/num as f64 - 1.0;
+        0.42 - 0.5 * cos(f) + 0.08 * cos(2_f64*f)
+    }).collect()
 }
 
 pub fn blackman_harris(num: usize) -> Vec<f32> {
@@ -72,4 +79,8 @@ pub fn flat_top(num: usize) -> Vec<f32> {
 
 fn point(data_point: f32, x: usize, num: usize) -> f32 {
     data_point * PI * x as f32 / (num as f32 - 1.0)
+}
+
+fn cos(entry: f64) -> f64 {
+    entry.cos()
 }
