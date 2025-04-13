@@ -20,11 +20,3 @@ fn test_bartlett_window_function() {
     assert_with_decimal_places!(window_functions::bartlett(10), 
     test_setup::get_window_sample(test_setup::Window::BARTLETT));
 }
-
-// #[test]
-// fn test_blackman_window_function() {
-
-//     let x = window_functions::blackman(30);
-    
-//     println!("{:?}", x);
-// }
