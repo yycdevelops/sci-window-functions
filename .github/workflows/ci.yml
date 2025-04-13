@@ -1,0 +1,19 @@
+name: Window Functions library build and test 
+
+on:
+  push:
+
+env: 
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test Package 
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo test
