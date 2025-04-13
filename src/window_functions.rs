@@ -52,6 +52,11 @@ pub fn blackman(num: usize) -> Vec<f64> {
     }).collect()
 }
 
+pub fn rectangle(num: usize) -> Vec<i32> {
+    std::iter::repeat(1).take(num).collect()
+}
+
+
 pub fn blackman_harris(num: usize) -> Vec<f32> {
     (0..num).map(|x| {
         0.35875 - 0.48829 * point(2_f32, x, num).cos()
@@ -76,6 +81,15 @@ pub fn flat_top(num: usize) -> Vec<f32> {
         + 0.032*point(8_f32, x, num).cos()
     }).collect()
 }
+
+pub fn welch(num: usize) -> Vec<f64> {
+    let num12: f64 = 0.5 * (num as f64-1.0);
+    (0..num).map(|x| {
+        let f: f64 = (x as f64 - num12)/num12;
+        1.0 - f*f
+    }).collect()
+}
+
 
 fn point(data_point: f32, x: usize, num: usize) -> f32 {
     data_point * PI * x as f32 / (num as f32 - 1.0)
