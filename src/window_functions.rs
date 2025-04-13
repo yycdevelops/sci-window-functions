@@ -98,3 +98,19 @@ fn point(data_point: f32, x: usize, num: usize) -> f32 {
 fn cos(entry: f64) -> f64 {
     entry.cos()
 }
+
+mod tests {
+    use std::f32::consts::PI;
+
+    #[test]
+    fn test_point() {
+        let point = crate::window_functions::point(2_f32, 10, 10); 
+        assert_eq!((2_f32 * PI * 10.0 / (10.0 - 1.0)), point);
+    }
+
+    #[test]
+    fn test_cos() {
+        let cos = (10.0 as f64).cos();
+        assert_eq!(cos, crate::window_functions::cos(10.0));
+    }
+}
