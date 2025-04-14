@@ -56,7 +56,6 @@ pub fn rectangle(num: usize) -> Vec<i32> {
     std::iter::repeat(1).take(num).collect()
 }
 
-
 pub fn blackman_harris(num: usize) -> Vec<f32> {
     (0..num).map(|x| {
         0.35875 - 0.48829 * point(2_f32, x, num).cos()
@@ -100,12 +99,11 @@ fn cos(entry: f64) -> f64 {
 }
 
 mod tests {
-    use std::f32::consts::PI;
 
     #[test]
     fn test_point() {
         let point = crate::window_functions::point(2_f32, 10, 10); 
-        assert_eq!((2_f32 * PI * 10.0 / (10.0 - 1.0)), point);
+        assert_eq!((2_f32 * std::f32::consts::PI * 10.0 / (10.0 - 1.0)), point);
     }
 
     #[test]

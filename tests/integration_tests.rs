@@ -20,3 +20,9 @@ fn test_bartlett_window_function() {
     assert_with_decimal_places!(window_functions::bartlett(10), 
     test_setup::get_window_sample(test_setup::Window::BARTLETT));
 }
+
+#[test]
+fn test_rectangle_window_function() {
+    let result: Vec<i32> = std::iter::repeat(1).take(10).collect();
+    assert_eq!(window_functions::rectangle(10),result)
+}
