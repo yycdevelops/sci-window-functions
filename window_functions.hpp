@@ -23,3 +23,37 @@ std::vector<T> hamming_window(size_t num) {
     }
     return values;
 }
+
+template<typename T>
+std::vector<T> bartlett_window(size_t num) {
+    std::vector<T> values;
+    for (int i = 0; (i < num); i++) {
+        //T value = abs(1 - (2 * i - 0.5 * num - 1) / num - 1);
+        T value = 1 - abs(2 * (i - 0.5*(num-1)) / (num-1));
+        values.push_back(value);
+    }
+    return values; 
+}
+
+template<typename T>
+std::vector<T> triangular_window(size_t num) {
+    std::vector<T> values; 
+    const int DEMON = num % 2 != 0 ? num + 1 : num;
+
+    for (int i = 0; (i < num); i++) {
+        T value = (1 - abs(2.0 * i - (num - 1)) / DEMON);
+        values.push_back(value);
+    }
+    return values;
+}
+
+template<typename T>
+std::vector<T> cosine_window(size_t num) {
+    std::vector<T> values; 
+    for (int i = 0; (i < num); i++) {
+        T value = sin(M_PI * i / (num - 1));
+        values.push_back(value);
+    }
+
+    return values;
+}
