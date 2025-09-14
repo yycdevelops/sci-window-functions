@@ -1,114 +1,101 @@
-use core::f64;
-use std::f32::consts::PI;
+use num_traits::{Float, FloatConst};
 
-static PI_F: f64 = f64::consts::PI;
-
-
-pub fn hanning(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {0.5 - 0.5 * (PI * 2_f32 * (x as f32) / (num as f32 - 1_f32)).cos()}).collect()
+#[derive(Clone, Copy)]
+pub enum Window {
+    HANNING,
+    HAMMING, 
+    BLACKMAN, 
+    BLACKMAN_HARRIS,
+    FLAT_TOP,
+    // BARTLETT,
+    // COSINE,
+    // LANCZOS,
+    // NUTTAL,
+    // RECTANGLE,
+    // WELCH
 }
 
-pub fn hamming(num: usize) -> Vec<f32> {
-    (0..num).map(|x| { 0.54 - 0.46 * (PI * 2_f32 * x as f32 / (num as f32 - 1_f32)).cos()}).collect()
+enum WindowType<T> {
+    COSINE {point_a: T, point_b: T}
 }
 
-pub fn bartlett(num: usize) -> Vec<f32> {
-    (0..num).map(|x|{1_f32 - (2_f32 * (x as f32 - 0.5 * (num as f32- 1_f32)) / (num as f32 - 1_f32)).abs()}).collect()
+pub struct WindowFunctionIterator {
+    length: usize, 
+    index: usize,
+    window_type: Window
 }
 
-pub fn triangular(num: usize) -> Vec<f32> {
-    let demoninator: i32 = if num % 2 != 0 { 
-        num as i32 + 1 as i32
-    }else{
-        num as i32
-    };
-    (0..num).map(|val| {
-        (1.0 - (2.0 * val as f32 - (num as f32 - 1.0)).abs() / demoninator as f32) as f32
-    }).collect()
+impl Iterator for WindowFunctionIterator {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index == self.length {
+            return None;
+        }
+        self.index += 1;
+        let val = self.window_type.calculate_point(self.index as f32, self.length);        
+        return Some(val);
+    }
 }
 
-pub fn cosine(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {(PI * x as f32 / (num as f32 - 1.0)).sin()}).collect()
+impl<T> WindowType<T> {     
+    pub fn calculate(self, length: usize, point: T) -> T where T: Float + FloatConst {
+        let len = T::from(length).unwrap();
+        match self {
+            WindowType::COSINE { point_a, point_b } => {
+                T::from(point_a).unwrap() - T::from(point_b).unwrap() * (T::PI() * T::from(2.0).unwrap() * T::from(point).unwrap() / (len - T::from(1.0).unwrap())).cos()
+            },
+        }
+    }
 }
 
-pub fn lanczos(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {
-        (|value: f32| { PI * value.sin() / (PI * value)})((2_f32 * x as f32 / (num as f32 - 1.0))-1.0)
-    }).collect()
+impl Window {
+    pub fn calculate_point(self, point: f32, length: usize) -> f32 {
+        
+        let PI: f32 = FloatConst::PI();
+
+        match self {
+            Window::HANNING => WindowType::COSINE { point_a: 0.5, point_b: 0.5 }.calculate(length, point),
+            Window::HAMMING => WindowType::COSINE { point_a: 0.54, point_b: 0.46 }.calculate(length, point),
+            Window::BLACKMAN => todo!(),
+            Window::BLACKMAN_HARRIS => {
+                        WindowType::COSINE { point_a: 0.35875, point_b: 0.48829 }.calculate(length, point) 
+                            + 0.1365995 * (4_f32 * PI * point / (length as f32 - 1.0)).cos() 
+                            - 0.01168 * (6_f32 * PI * point / (length as f32 - 1.0)).cos()
+                    },
+            Window::FLAT_TOP => {
+                WindowType::COSINE { point_a: 1.0, point_b: 1.93 }.calculate(length, point) + 1.29 * (4_f32 * PI / (length as f32 - 1.0)).cos() - 0.388 * (6_f32 * PI / (length as f32 - 1.0)).cos() + 0.032 * (8_f32 * PI / (length as f32 - 1.0)).cos()
+            },
+        }
+
+            //Window::HANNING =>  { 0.5 - 0.5 * (PI * 2_f32 * point / (length as f32 - 1_f32)).cos() }
+        //     Window::HAMMING =>  { 0.54 - 0.46 * (PI * 2_f32 * point / (length as f32 - 1_f32)).cos()},
+        //     Window::BARTLETT => { 1_f32 - (2_f32 * (point - 0.5 * (length as f32- 1_f32)) / (length as f32 - 1_f32)).abs()},
+        //     Window::COSINE =>   { (PI * point / (length as f32 - 1.0)).sin() },
+        //     Window::LANCZOS => {  (|value: f32| { PI * value.sin() / (PI * value)}) ((2_f32 * point / (length as f32 - 1.0))-1.0)},
+        //     Window::NUTTAL => todo!(),
+        //     Window::RECTANGLE => { 1.0 },
+        //     Window::WELCH => todo!(),
+        // }
+    }
+    
+}
+pub fn window(length: usize, window_type: Window) -> WindowFunctionIterator {
+    WindowFunctionIterator { length: length, index: 0, window_type: window_type }
 }
 
-pub fn nuttall(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {
-        0.355768 - 0.487396 * point(2_f32, x, num).cos() 
-            + 0.144232 * point(4_f32, x, num).cos()  
-            - 0.012604 * point(6_f32, x, num).cos()   
-    }).collect()
-}
-
-pub fn blackman(num: usize) -> Vec<f64> {
-    (0..num).map(|x| {
-        let f: f64 = PI_F*2.0*x as f64/num as f64 - 1.0;
-        0.42 - 0.5 * cos(f) + 0.08 * cos(2_f64*f)
-    }).collect()
-}
-
-pub fn rectangle(num: usize) -> Vec<i32> {
-    std::iter::repeat(1).take(num).collect()
-}
-
-pub fn blackman_harris(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {
-        0.35875 - 0.48829 * point(2_f32, x, num).cos()
-        + 0.14128 * point(4_f32, x, num).cos()
-        - 0.01168 * point(6_f32, x, num).cos()
-    }).collect()
-}
-
-pub fn blackman_nuttall(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {
-        0.3635819 - 0.3635819*point(2_f32, x, num).cos()
-        + 0.1365995*point(4_f32, x, num).cos()
-        - 0.0106411*point(6_f32, x, num).cos()
-    }).collect()
-}
-
-pub fn flat_top(num: usize) -> Vec<f32> {
-    (0..num).map(|x| {
-        1.0 - 1.93*point(2_f32, x, num).cos()
-        + 1.29*point(4_f32, x, num).cos()
-        - 0.388*point(6_f32, x, num).cos()
-        + 0.032*point(8_f32, x, num).cos()
-    }).collect()
-}
-
-pub fn welch(num: usize) -> Vec<f64> {
-    let num12: f64 = 0.5 * (num as f64-1.0);
-    (0..num).map(|x| {
-        let f: f64 = (x as f64 - num12)/num12;
-        1.0 - f*f
-    }).collect()
-}
-
-
-fn point(data_point: f32, x: usize, num: usize) -> f32 {
-    data_point * PI * x as f32 / (num as f32 - 1.0)
-}
-
-fn cos(entry: f64) -> f64 {
-    entry.cos()
-}
 
 mod tests {
+    use crate::window_functions::{window, Window};
 
     #[test]
-    fn test_point() {
-        let point = crate::window_functions::point(2_f32, 10, 10); 
-        assert_eq!((2_f32 * std::f32::consts::PI * 10.0 / (10.0 - 1.0)), point);
-    }
+    fn test_something() {
+        let window = window(100, Window::FLAT_TOP);
 
-    #[test]
-    fn test_cos() {
-        let cos = (10.0 as f64).cos();
-        assert_eq!(cos, crate::window_functions::cos(10.0));
+        for x in window {
+            println!("{:?},", x);
+        }
+
+        assert_eq!(10, 20);
     }
 }
