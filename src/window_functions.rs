@@ -1,101 +1,80 @@
-use num_traits::{Float, FloatConst};
+use std::{path::Iter, sync::Arc};
 
-#[derive(Clone, Copy)]
+use num_traits::{Float, FloatConst}; 
 pub enum Window {
     HANNING,
-    HAMMING, 
-    BLACKMAN, 
-    BLACKMAN_HARRIS,
-    FLAT_TOP,
-    // BARTLETT,
-    // COSINE,
-    // LANCZOS,
-    // NUTTAL,
-    // RECTANGLE,
-    // WELCH
+    HAMMING
 }
 
-enum WindowType<T> {
-    COSINE {point_a: T, point_b: T}
+#[derive(Copy, Clone)]
+enum WindowType<T> where T: Float + FloatConst {
+    COSINE {const_a: T, const_b: T}
 }
 
-pub struct WindowFunctionIterator {
-    length: usize, 
+#[derive(Copy, Clone)]
+struct GenericIter<T> where T: Float + FloatConst {
+    size: usize, 
     index: usize,
-    window_type: Window
+    window: WindowType<T>
 }
 
-impl Iterator for WindowFunctionIterator {
-    type Item = f32;
+impl<T> Iterator for GenericIter<T> where T: Float + FloatConst {
+    type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index == self.length {
+        if self.index == self.size {
             return None;
         }
-        self.index += 1;
-        let val = self.window_type.calculate_point(self.index as f32, self.length);        
-        return Some(val);
+        let y = self.calculate();
+        self.index += 1;       
+        Some(y)
     }
 }
 
-impl<T> WindowType<T> {     
-    pub fn calculate(self, length: usize, point: T) -> T where T: Float + FloatConst {
-        let len = T::from(length).unwrap();
-        match self {
-            WindowType::COSINE { point_a, point_b } => {
-                T::from(point_a).unwrap() - T::from(point_b).unwrap() * (T::PI() * T::from(2.0).unwrap() * T::from(point).unwrap() / (len - T::from(1.0).unwrap())).cos()
+impl<T> GenericIter<T> where T: Float + FloatConst {
+    fn calculate(self) -> T {
+        match self.window {
+            WindowType::COSINE { const_a , const_b} => {
+                return T::from(const_a).unwrap() - T::from(const_b).unwrap() 
+                    * (T::PI() * T::from(2.0).unwrap() * (T::from(self.index).unwrap()) / (T::from(self.size).unwrap() - T::from(1.0).unwrap())).cos()
             },
         }
     }
+
 }
 
-impl Window {
-    pub fn calculate_point(self, point: f32, length: usize) -> f32 {
-        
-        let PI: f32 = FloatConst::PI();
-
-        match self {
-            Window::HANNING => WindowType::COSINE { point_a: 0.5, point_b: 0.5 }.calculate(length, point),
-            Window::HAMMING => WindowType::COSINE { point_a: 0.54, point_b: 0.46 }.calculate(length, point),
-            Window::BLACKMAN => todo!(),
-            Window::BLACKMAN_HARRIS => {
-                        WindowType::COSINE { point_a: 0.35875, point_b: 0.48829 }.calculate(length, point) 
-                            + 0.1365995 * (4_f32 * PI * point / (length as f32 - 1.0)).cos() 
-                            - 0.01168 * (6_f32 * PI * point / (length as f32 - 1.0)).cos()
-                    },
-            Window::FLAT_TOP => {
-                WindowType::COSINE { point_a: 1.0, point_b: 1.93 }.calculate(length, point) + 1.29 * (4_f32 * PI / (length as f32 - 1.0)).cos() - 0.388 * (6_f32 * PI / (length as f32 - 1.0)).cos() + 0.032 * (8_f32 * PI / (length as f32 - 1.0)).cos()
-            },
-        }
-
-            //Window::HANNING =>  { 0.5 - 0.5 * (PI * 2_f32 * point / (length as f32 - 1_f32)).cos() }
-        //     Window::HAMMING =>  { 0.54 - 0.46 * (PI * 2_f32 * point / (length as f32 - 1_f32)).cos()},
-        //     Window::BARTLETT => { 1_f32 - (2_f32 * (point - 0.5 * (length as f32- 1_f32)) / (length as f32 - 1_f32)).abs()},
-        //     Window::COSINE =>   { (PI * point / (length as f32 - 1.0)).sin() },
-        //     Window::LANCZOS => {  (|value: f32| { PI * value.sin() / (PI * value)}) ((2_f32 * point / (length as f32 - 1.0))-1.0)},
-        //     Window::NUTTAL => todo!(),
-        //     Window::RECTANGLE => { 1.0 },
-        //     Window::WELCH => todo!(),
-        // }
-    }
+fn window<T>(window: Window) -> GenericIter<T> where T: Float + FloatConst {
     
+    match window {
+        Window::HANNING => {
+                GenericIter { 
+                        size: 30, 
+                        index: 0,
+                        window: WindowType::COSINE { const_a: T::from(0.5).unwrap(), const_b: T::from(0.5).unwrap() } 
+                }
+            },
+        Window::HAMMING => {
+            GenericIter {
+                size: 30,
+                index: 0,
+                window: WindowType::COSINE { const_a: T::from(0.54).unwrap(), const_b: T::from(0.46).unwrap() }
+            }
+        },
+    }
 }
-pub fn window(length: usize, window_type: Window) -> WindowFunctionIterator {
-    WindowFunctionIterator { length: length, index: 0, window_type: window_type }
-}
-
 
 mod tests {
-    use crate::window_functions::{window, Window};
+    use crate::window_functions::{window, GenericIter, Window};
 
     #[test]
     fn test_something() {
-        let window = window(100, Window::FLAT_TOP);
+        let window: GenericIter<f32> = window(Window::HAMMING);
 
-        for x in window {
-            println!("{:?},", x);
+        for w in window {
+            println!("{:?},", w);
         }
 
         assert_eq!(10, 20);
     }
 }
+
