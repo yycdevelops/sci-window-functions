@@ -64,7 +64,7 @@ where
                 const_d,
                 const_e,
             } => {
-                return T::from(const_a).unwrap()
+                T::from(const_a).unwrap()
                     - T::from(const_b).unwrap()
                         * (T::PI() * T::from(2.0).unwrap() * (T::from(self.index).unwrap())
                             / (T::from(self.size).unwrap() - T::from(1.0).unwrap()))
@@ -80,7 +80,7 @@ where
                     + T::from(const_e).unwrap()
                         * (T::PI() * T::from(8.0).unwrap() * (T::from(self.index).unwrap())
                             / (T::from(self.size).unwrap() - T::from(1.0).unwrap()))
-                        .cos();
+                        .cos()
             }
         }
     }
