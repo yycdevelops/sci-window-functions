@@ -6,6 +6,7 @@ pub enum Window {
     HAMMING,
     NUTTALL,
     BLACKMAN,
+    EXACT_BLACKMAN,
     BLACKMAN_HARRIS,
     BLACKMAN_NUTALL,
     FLAT_TOP,
@@ -168,6 +169,17 @@ where
                 const_e: T::from(0.032).unwrap(),
             },
         },
+        Window::EXACT_BLACKMAN => GenericIter {
+            size: size,
+            index: 0,
+            window: WindowType::COSINE {
+                const_a: T::from(0.4243801).unwrap(),
+                const_b: T::from(0.4973406).unwrap(),
+                const_c: T::from(0.0782793).unwrap(),
+                const_d: T::zero(),
+                const_e: T::zero(),
+            },
+        },
     }
 }
 
@@ -176,7 +188,7 @@ mod tests {
 
     #[test]
     fn test_something() {
-        let window: GenericIter<f32> = window(20000, Window::FLAT_TOP);
+        let window: GenericIter<f32> = window(20, Window::EXACT_BLACKMAN);
 
         for w in window {
             println!("{:?},", w);
