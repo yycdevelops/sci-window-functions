@@ -25,13 +25,32 @@ where
 }
 
 #[derive(Copy, Clone, Debug)]
-struct GenericIter<T>
+pub struct GenericIter<T>
 where
     T: Float + FloatConst,
 {
     size: usize,
     index: usize,
     window: WindowType<T>,
+}
+
+impl<T> Default for GenericIter<T>
+where
+    T: Float + FloatConst,
+{
+    fn default() -> Self {
+        Self {
+            size: Default::default(),
+            index: Default::default(),
+            window: WindowType::COSINE {
+                const_a: T::zero(),
+                const_b: T::zero(),
+                const_c: T::zero(),
+                const_d: T::zero(),
+                const_e: T::zero(),
+            },
+        }
+    }
 }
 
 impl<T> Iterator for GenericIter<T>
@@ -85,7 +104,7 @@ where
     }
 }
 
-fn window<T>(size: usize, window: Window) -> GenericIter<T>
+pub fn window<T>(size: usize, window: Window) -> GenericIter<T>
 where
     T: Float + FloatConst,
 {
@@ -182,7 +201,6 @@ where
 }
 
 mod tests {
-
     #[test]
     fn test_hanning_window() {
         let expected: Vec<f32> = vec![
@@ -195,19 +213,22 @@ mod tests {
                 .collect();
         assert_eq!(expected, window_hanning);
     }
+
+    #[test]
+    fn test_generic_iter() {
+        let x: super::GenericIter<f32> = super::GenericIter {
+            size: 10,
+            index: 0,
+            window: super::WindowType::COSINE {
+                const_a: 1.0,
+                const_b: 1.0,
+                const_c: 1.0,
+                const_d: 1.0,
+                const_e: 1.0,
+            },
+        };
+
+        assert_eq!(x.size, 10);
+        assert_eq!(x.index, 0);
+    }
 }
-
-// mod tests {
-//     use crate::window_functions::{GenericIter, Window, window};
-
-//     #[test]
-//     fn test_something() {
-//         let window: GenericIter<f32> = window(20, Window::EXACT_BLACKMAN);
-
-//         for w in window {
-//             println!("{:?},", w);
-//         }
-
-//         assert_eq!(10, 20);
-//     }
-// }
