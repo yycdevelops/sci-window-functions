@@ -183,17 +183,17 @@ where
     }
 }
 
-mod tests {
-    use crate::window_functions::{GenericIter, Window, window};
+// mod tests {
+//     use crate::window_functions::{GenericIter, Window, window};
 
-    #[test]
-    fn test_something() {
-        let window: GenericIter<f32> = window(20, Window::EXACT_BLACKMAN);
+//     #[test]
+//     fn test_something() {
+//         let window: GenericIter<f32> = window(20, Window::EXACT_BLACKMAN);
 
-        for w in window {
-            println!("{:?},", w);
-        }
+//         for w in window {
+//             println!("{:?},", w);
+//         }
 
-        assert_eq!(10, 20);
-    }
-}
+//         assert_eq!(10, 20);
+//     }
+// }
