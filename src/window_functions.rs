@@ -1,18 +1,16 @@
-use std::{path::Iter, sync::Arc};
-
 use num_traits::{Float, FloatConst};
 pub enum Window {
-    HANNING,
-    HAMMING,
-    NUTTALL,
-    BLACKMAN,
-    EXACT_BLACKMAN,
-    BLACKMAN_HARRIS,
-    BLACKMAN_NUTALL,
-    FLAT_TOP,
+    Hanning,
+    Hamming,
+    Nutall,
+    Blackman,
+    ExactBlackman,
+    BlackmanHarris,
+    BlackmanNutall,
+    FlatTop,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 enum WindowType<T>
 where
     T: Float + FloatConst,
@@ -26,7 +24,7 @@ where
     },
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct GenericIter<T>
 where
     T: Float + FloatConst,
@@ -92,7 +90,7 @@ where
     T: Float + FloatConst,
 {
     match window {
-        Window::HANNING => GenericIter {
+        Window::Hanning => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -103,7 +101,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::HAMMING => GenericIter {
+        Window::Hamming => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -114,7 +112,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::BLACKMAN => GenericIter {
+        Window::Blackman => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -125,7 +123,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::BLACKMAN_HARRIS => GenericIter {
+        Window::BlackmanHarris => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -136,7 +134,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::NUTTALL => GenericIter {
+        Window::Nutall => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -147,7 +145,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::BLACKMAN_NUTALL => GenericIter {
+        Window::BlackmanNutall => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -158,7 +156,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::FLAT_TOP => GenericIter {
+        Window::FlatTop => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -169,7 +167,7 @@ where
                 const_e: T::from(0.032).unwrap(),
             },
         },
-        Window::EXACT_BLACKMAN => GenericIter {
+        Window::ExactBlackman => GenericIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -180,6 +178,22 @@ where
                 const_e: T::zero(),
             },
         },
+    }
+}
+
+mod tests {
+
+    #[test]
+    fn test_hanning_window() {
+        let expected: Vec<f32> = vec![
+            0.0, 0.11697778, 0.41317594, 0.75, 0.96984637, 0.96984625, 0.74999994, 0.4131757,
+            0.11697769, 0.0,
+        ];
+        let window_hanning: Vec<f32> =
+            crate::window_functions::window(10, crate::window_functions::Window::Hanning)
+                .into_iter()
+                .collect();
+        assert_eq!(expected, window_hanning);
     }
 }
 
