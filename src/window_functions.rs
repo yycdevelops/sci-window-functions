@@ -8,6 +8,7 @@ pub enum Window {
     BlackmanHarris,
     BlackmanNutall,
     FlatTop,
+    TRIANGULAR,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -21,6 +22,11 @@ where
         const_c: T,
         const_d: T,
         const_e: T,
+    },
+
+    TRIANGULAR {
+        const_a: T,
+        const_b: T,
     },
 }
 
@@ -85,20 +91,27 @@ where
                 T::from(const_a).unwrap()
                     - T::from(const_b).unwrap()
                         * (T::PI() * T::from(2.0).unwrap() * (T::from(self.index).unwrap())
-                            / (T::from(self.size).unwrap() - T::from(1.0).unwrap()))
+                            / (T::from(self.size).unwrap() - T::one()))
                         .cos()
                     + T::from(const_c).unwrap()
                         * (T::PI() * T::from(4.0).unwrap() * (T::from(self.index).unwrap())
-                            / (T::from(self.size).unwrap() - T::from(1.0).unwrap()))
+                            / (T::from(self.size).unwrap() - T::one()))
                         .cos()
                     - T::from(const_d).unwrap()
                         * (T::PI() * T::from(6.0).unwrap() * (T::from(self.index).unwrap())
-                            / (T::from(self.size).unwrap() - T::from(1.0).unwrap()))
+                            / (T::from(self.size).unwrap() - T::one()))
                         .cos()
                     + T::from(const_e).unwrap()
                         * (T::PI() * T::from(8.0).unwrap() * (T::from(self.index).unwrap())
-                            / (T::from(self.size).unwrap() - T::from(1.0).unwrap()))
+                            / (T::from(self.size).unwrap() - T::one()))
                         .cos()
+            }
+            WindowType::TRIANGULAR { const_a, const_b } => {
+                let num = T::from(self.size).unwrap();
+                let demon = num + T::from(1.0).unwrap();
+
+                let x = T::from(1.0).unwrap() - (T::from(2.0).unwrap() * T::from(self.index).unwrap() - (num - T::one())).abs() / demon;
+                return x;
             }
         }
     }
@@ -197,6 +210,14 @@ where
                 const_e: T::zero(),
             },
         },
+        Window::TRIANGULAR => GenericIter {
+            size: 30,
+            index: 0,
+            window: WindowType::TRIANGULAR {
+                const_a: T::zero(),
+                const_b: T::zero(),
+            },
+        },
     }
 }
 
@@ -207,13 +228,13 @@ mod tests {
             0.0, 0.11697778, 0.41317594, 0.75, 0.96984637, 0.96984625, 0.74999994, 0.4131757,
             0.11697769, 0.0,
         ];
+
         let window_hanning: Vec<f32> =
             crate::window_functions::window(10, crate::window_functions::Window::Hanning)
                 .into_iter()
                 .collect();
         assert_eq!(expected, window_hanning);
     }
-
     #[test]
     fn test_generic_iter() {
         let x: super::GenericIter<f32> = super::GenericIter {
