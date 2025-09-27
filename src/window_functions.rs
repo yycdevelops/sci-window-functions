@@ -1,4 +1,5 @@
-use num_traits::{Float, FloatConst};
+use crate::Consts;
+
 pub enum Window {
     Hanning,
     Hamming,
@@ -8,13 +9,12 @@ pub enum Window {
     BlackmanHarris,
     BlackmanNutall,
     FlatTop,
-    TRIANGULAR,
 }
 
 #[derive(Copy, Clone, Debug)]
 enum WindowType<T>
 where
-    T: Float + FloatConst,
+    T: Consts,
 {
     COSINE {
         const_a: T,
@@ -23,26 +23,21 @@ where
         const_d: T,
         const_e: T,
     },
-
-    TRIANGULAR {
-        const_a: T,
-        const_b: T,
-    },
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct GenericIter<T>
+pub struct WindowIter<T>
 where
-    T: Float + FloatConst,
+    T: Consts,
 {
     size: usize,
     index: usize,
     window: WindowType<T>,
 }
 
-impl<T> Default for GenericIter<T>
+impl<T> Default for WindowIter<T>
 where
-    T: Float + FloatConst,
+    T: Consts,
 {
     fn default() -> Self {
         Self {
@@ -59,9 +54,9 @@ where
     }
 }
 
-impl<T> Iterator for GenericIter<T>
+impl<T> Iterator for WindowIter<T>
 where
-    T: Float + FloatConst,
+    T: Consts,
 {
     type Item = T;
 
@@ -75,9 +70,9 @@ where
     }
 }
 
-impl<T> GenericIter<T>
+impl<T> WindowIter<T>
 where
-    T: Float + FloatConst,
+    T: Consts,
 {
     fn calculate(self) -> T {
         match self.window {
@@ -106,23 +101,16 @@ where
                             / (T::from(self.size).unwrap() - T::one()))
                         .cos()
             }
-            WindowType::TRIANGULAR { const_a, const_b } => {
-                let num = T::from(self.size).unwrap();
-                let demon = num + T::from(1.0).unwrap();
-
-                let x = T::from(1.0).unwrap() - (T::from(2.0).unwrap() * T::from(self.index).unwrap() - (num - T::one())).abs() / demon;
-                return x;
-            }
         }
     }
 }
 
-pub fn window<T>(size: usize, window: Window) -> GenericIter<T>
+pub fn window<T>(size: usize, window: Window) -> WindowIter<T>
 where
-    T: Float + FloatConst,
+    T: Consts,
 {
     match window {
-        Window::Hanning => GenericIter {
+        Window::Hanning => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -133,7 +121,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::Hamming => GenericIter {
+        Window::Hamming => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -144,7 +132,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::Blackman => GenericIter {
+        Window::Blackman => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -155,7 +143,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::BlackmanHarris => GenericIter {
+        Window::BlackmanHarris => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -166,7 +154,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::Nutall => GenericIter {
+        Window::Nutall => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -177,7 +165,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::BlackmanNutall => GenericIter {
+        Window::BlackmanNutall => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -188,7 +176,7 @@ where
                 const_e: T::zero(),
             },
         },
-        Window::FlatTop => GenericIter {
+        Window::FlatTop => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -199,7 +187,7 @@ where
                 const_e: T::from(0.032).unwrap(),
             },
         },
-        Window::ExactBlackman => GenericIter {
+        Window::ExactBlackman => WindowIter {
             size: size,
             index: 0,
             window: WindowType::COSINE {
@@ -208,14 +196,6 @@ where
                 const_c: T::from(0.0782793).unwrap(),
                 const_d: T::zero(),
                 const_e: T::zero(),
-            },
-        },
-        Window::TRIANGULAR => GenericIter {
-            size: 30,
-            index: 0,
-            window: WindowType::TRIANGULAR {
-                const_a: T::zero(),
-                const_b: T::zero(),
             },
         },
     }
@@ -237,7 +217,7 @@ mod tests {
     }
     #[test]
     fn test_generic_iter() {
-        let x: super::GenericIter<f32> = super::GenericIter {
+        let x: super::WindowIter<f32> = super::WindowIter {
             size: 10,
             index: 0,
             window: super::WindowType::COSINE {
